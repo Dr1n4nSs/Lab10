@@ -1,0 +1,14 @@
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\bin\Debug\net10.0\Компилятор.exe
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\bin\Debug\net10.0\Компилятор.deps.json
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\bin\Debug\net10.0\Компилятор.runtimeconfig.json
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\bin\Debug\net10.0\Компилятор.dll
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\bin\Debug\net10.0\Компилятор.pdb
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\obj\Debug\net10.0\Компилятор.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\obj\Debug\net10.0\Компилятор.AssemblyInfoInputs.cache
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\obj\Debug\net10.0\Компилятор.AssemblyInfo.cs
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\obj\Debug\net10.0\Компилятор.csproj.CoreCompileInputs.cache
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\obj\Debug\net10.0\Компилятор.dll
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\obj\Debug\net10.0\refint\Компилятор.dll
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\obj\Debug\net10.0\Компилятор.pdb
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\obj\Debug\net10.0\Компилятор.genruntimeconfig.cache
+C:\Users\Иван\RiderProjects\Компилятор\Компилятор\obj\Debug\net10.0\ref\Компилятор.dll

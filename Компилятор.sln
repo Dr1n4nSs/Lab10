@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Компилятор", "Компилятор\Компилятор.csproj", "{49C34421-AD1C-489C-A524-5EC6C9FCB28D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{49C34421-AD1C-489C-A524-5EC6C9FCB28D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49C34421-AD1C-489C-A524-5EC6C9FCB28D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49C34421-AD1C-489C-A524-5EC6C9FCB28D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49C34421-AD1C-489C-A524-5EC6C9FCB28D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
