@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace Компилятор
@@ -7,32 +7,79 @@ namespace Компилятор
     {
         static void Main(string[] args)
         {
-            string path = "source_test.pas";
+            string path1 = "source_test1.pas";
+            string path2 = "source_test2.pas";
+            string path3 = "source_test3.pas";
             
-            string[] mockCode = new string[] {
-                "prog@ram Test;@@@",
-                "var a: integer;@@@",
-                "begin@@@",
-                "  a := 10; @@@",
-                "end."
-            };
-            
-            File.WriteAllLines(path, mockCode);
             Console.WriteLine("=== Тестирование модуля ввода-вывода ===\n");
+
+            Console.WriteLine("Выберите тест: ");
+            string option = Console.ReadLine();;
+            int cur_option = int.Parse(option);
             
-            InputOutput.Init(path);
-
-            while (!InputOutput.IsEndOfFile)
+            switch (cur_option)
             {
-                if (InputOutput.Ch == '@')
-                {
-                    InputOutput.Error(1, InputOutput.PositionNow);
-                }
+                case 1: 
+                    InputOutput.Init(path1);
+                    while (!InputOutput.IsEndOfFile)
+                    {
+                        if (InputOutput.Ch == '@')
+                        {
+                            InputOutput.Error(1, InputOutput.PositionNow);
+                        }
+                        if (InputOutput.Ch == '#')
+                        {
+                            InputOutput.Error(2, InputOutput.PositionNow);
+                        }
+                        if (InputOutput.Ch == '^')
+                        {
+                            InputOutput.Error(3, InputOutput.PositionNow);
+                        }
 
-                InputOutput.NextCh();
+                        InputOutput.NextCh();
+                    }
+                    break;
+                case 2: InputOutput.Init(path2); 
+                    while (!InputOutput.IsEndOfFile)
+                    {
+                        if (InputOutput.Ch == '@')
+                        {
+                            InputOutput.Error(1, InputOutput.PositionNow);
+                        }
+                        if (InputOutput.Ch == '#')
+                        {
+                            InputOutput.Error(2, InputOutput.PositionNow);
+                        }
+                        if (InputOutput.Ch == '^')
+                        {
+                            InputOutput.Error(3, InputOutput.PositionNow);
+                        }
+
+                        InputOutput.NextCh();
+                    }
+                    break;
+                case 3: InputOutput.Init(path3); 
+                    while (!InputOutput.IsEndOfFile)
+                    {
+                        if (InputOutput.Ch == '@')
+                        {
+                            InputOutput.Error(1, InputOutput.PositionNow);
+                        }
+                        if (InputOutput.Ch == '#')
+                        {
+                            InputOutput.Error(2, InputOutput.PositionNow);
+                        }
+                        if (InputOutput.Ch == '^')
+                        {
+                            InputOutput.Error(3, InputOutput.PositionNow);
+                        }
+
+                        InputOutput.NextCh();
+                    }
+                    break;
+                default: Console.WriteLine("Заданного теста не существует"); break;
             }
-
-            Console.ReadKey();
+            
         }
     }
 }
