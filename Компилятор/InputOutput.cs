@@ -34,10 +34,10 @@ namespace Компилятор
         
         private static char _ch;
         private static TextPosition _positionNow;
-        private static string _line = "";
-        private static int _lastInLine = 0;
-        private static List<Err> _err = new List<Err>();
-        private static List<Err> _allErrors = new List<Err>();
+        private static string _line;
+        private static int _lastInLine;
+        private static List<Err> _err;
+        private static List<Err> _allErrors;
         private static StreamReader _fileReader;
         private static uint _errCount = 0;
         private static bool _isEndOfFile;
@@ -97,6 +97,7 @@ namespace Компилятор
                 }
 
                 _fileReader = new StreamReader(filePath);
+                
             }
             catch (Exception ex)
             {
@@ -184,18 +185,21 @@ namespace Компилятор
             _fileReader.Close();
             
             Console.WriteLine("\n----------------------------------------");
-            Console.WriteLine($"Компиляция завершена. Всего выведено ошибок: " +
+            Console.WriteLine($"Компиляция завершена. Всего ошибок: " +
                               $"{_errCount}");
             Console.WriteLine("----------------------------------------");
             
             if (_allErrors.Count > 0)
             {
+                int i = 0;
                 Console.WriteLine("Список всех зарегистрированных ошибок:");
                 foreach (Err error in _allErrors)
                 {
-                    Console.WriteLine($"Ошибка {error.errorCode} " +
+                    Console.WriteLine($"**{i:D2}** " + 
+                                      $"Ошибка {error.errorCode} " +
                                       $"в строке {error.errorPosition.lineNumber} " +
                                       $"на позиции {error.errorPosition.charNumber}");
+                    i++;
                 }
                 Console.WriteLine("----------------------------------------");
             }
