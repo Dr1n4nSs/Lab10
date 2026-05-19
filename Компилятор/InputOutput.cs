@@ -20,7 +20,7 @@ namespace Компилятор
     {
         public TextPosition errorPosition;
         public byte errorCode;
-        public string errorDescription; // Добавили поле для описания ошибки
+        public string errorDescription;
 
         public Err(TextPosition errorPosition, byte errorCode, string errorDescription)
         {
@@ -34,7 +34,6 @@ namespace Компилятор
     {
         private const byte ERRMAX = 9;
         
-        // Словарь для хранения символов-триггеров, их кодов и описаний
         private static Dictionary<char, (byte Code, string Desc)> _errorRules;
 
         private static char _ch;
@@ -67,7 +66,6 @@ namespace Компилятор
             get { return _err; }
         }
 
-        // Свойство для доступа к правилам ошибок извне
         public static Dictionary<char, (byte Code, string Desc)> ErrorRules
         {
             get { return _errorRules; }
@@ -81,7 +79,6 @@ namespace Компилятор
             _err = new List<Err>();
             _allErrors = new List<Err>();
 
-            // Инициализируем словарь правил вручную
             _errorRules = new Dictionary<char, (byte Code, string Desc)>();
             _errorRules.Add('@', (1, "Нахождение недопустимого символа '@'"));
             _errorRules.Add('#', (2, "Нахождение недопустимого символа '#'"));
@@ -224,7 +221,6 @@ namespace Компилятор
             _err.Clear();
         }
 
-        // Перегрузили метод Error, чтобы он принимал еще и текстовое описание
         public static void Error(byte errorCode, TextPosition position, string description)
         {
             if (_allErrors.Count < ERRMAX)
