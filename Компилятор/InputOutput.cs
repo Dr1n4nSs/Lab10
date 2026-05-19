@@ -20,11 +20,13 @@ namespace Компилятор
     {
         public TextPosition errorPosition;
         public byte errorCode;
+        public string errorDescription; // Добавили поле для описания ошибки
 
-        public Err(TextPosition errorPosition, byte errorCode)
+        public Err(TextPosition errorPosition, byte errorCode, string errorDescription)
         {
             this.errorPosition = errorPosition;
             this.errorCode = errorCode;
+            this.errorDescription = errorDescription;
         }
     }
 
@@ -32,6 +34,9 @@ namespace Компилятор
     {
         private const byte ERRMAX = 9;
         
+        // Словарь для хранения символов-триггеров, их кодов и описаний
+        private static Dictionary<char, (byte Code, string Desc)> _errorRules;
+
         private static char _ch;
         private static TextPosition _positionNow;
         private static string _line;
@@ -44,34 +49,28 @@ namespace Компилятор
         
         public static char Ch
         {
-            get
-            {
-                return _ch;
-            }
+            get { return _ch; }
         }
 
         public static TextPosition PositionNow
         {
-            get
-            {
-                return _positionNow;
-            }
+            get { return _positionNow; }
         }
 
         public static bool IsEndOfFile
         {
-            get
-            {
-                return _isEndOfFile;
-            }
+            get { return _isEndOfFile; }
         }
 
         public static List<Err> ErrList
         {
-            get
-            {
-                return _err;
-            }
+            get { return _err; }
+        }
+
+        // Свойство для доступа к правилам ошибок извне
+        public static Dictionary<char, (byte Code, string Desc)> ErrorRules
+        {
+            get { return _errorRules; }
         }
 
         public static void Init(string filePath)
@@ -81,6 +80,12 @@ namespace Компилятор
             _isEndOfFile = false;
             _err = new List<Err>();
             _allErrors = new List<Err>();
+
+            // Инициализируем словарь правил вручную
+            _errorRules = new Dictionary<char, (byte Code, string Desc)>();
+            _errorRules.Add('@', (1, "Нахождение недопустимого символа '@'"));
+            _errorRules.Add('#', (2, "Нахождение недопустимого символа '#'"));
+            _errorRules.Add('^', (3, "Нахождение недопустимого символа '^'"));
 
             try
             {
@@ -97,12 +102,10 @@ namespace Компилятор
                 }
 
                 _fileReader = new StreamReader(filePath);
-                
             }
             catch (Exception ex)
             {
-                throw new IOException($"Не удалось подготовить файл или директорию: " +
-                                      $"{ex.Message}", ex);
+                throw new IOException($"Не удалось подготовить файл или директорию: {ex.Message}", ex);
             }
 
             ReadNextLine();
@@ -120,10 +123,7 @@ namespace Компилятор
 
         public static void NextCh()
         {
-            if (_isEndOfFile)
-            {
-                return;
-            }
+            if (_isEndOfFile) return;
 
             if (_positionNow.charNumber >= _lastInLine)
             {
@@ -135,10 +135,7 @@ namespace Компилятор
 
                 ReadNextLine();
 
-                if (_isEndOfFile)
-                {
-                    return;
-                }
+                if (_isEndOfFile) return;
 
                 _positionNow.lineNumber++;
                 _positionNow.charNumber = 0;
@@ -185,8 +182,7 @@ namespace Компилятор
             _fileReader.Close();
             
             Console.WriteLine("\n----------------------------------------");
-            Console.WriteLine($"Компиляция завершена. Всего ошибок: " +
-                              $"{_errCount}");
+            Console.WriteLine($"Компиляция завершена. Всего ошибок: {_errCount}");
             Console.WriteLine("----------------------------------------");
             
             if (_allErrors.Count > 0)
@@ -195,8 +191,8 @@ namespace Компилятор
                 Console.WriteLine("Список всех зарегистрированных ошибок:");
                 foreach (Err error in _allErrors)
                 {
-                    Console.WriteLine($"**{i:D2}** " + 
-                                      $"Ошибка {error.errorCode} " +
+                    // Выводим красивое текстовое описание ошибки из структуры Err
+                    Console.WriteLine($"**{i:D2}** Ошибка {error.errorCode} ({error.errorDescription}) " +
                                       $"в строке {error.errorPosition.lineNumber} " +
                                       $"на позиции {error.errorPosition.charNumber}");
                     i++;
@@ -215,7 +211,7 @@ namespace Компилятор
             {
                 _errCount++;
                 prefix = $"**{_errCount:D2}**";
-                spacesCount = item.errorPosition.charNumber;
+                spacesCount = 7 + (int)item.errorPosition.charNumber;
                 
                 arrows = "";
                 for (int i = 0; i < spacesCount; i++)
@@ -228,11 +224,12 @@ namespace Компилятор
             _err.Clear();
         }
 
-        public static void Error(byte errorCode, TextPosition position)
+        // Перегрузили метод Error, чтобы он принимал еще и текстовое описание
+        public static void Error(byte errorCode, TextPosition position, string description)
         {
             if (_allErrors.Count < ERRMAX)
             {
-                Err e = new Err(position, errorCode);
+                Err e = new Err(position, errorCode, description);
                 _err.Add(e);
                 _allErrors.Add(e); 
             }
