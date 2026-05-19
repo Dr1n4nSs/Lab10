@@ -29,21 +29,15 @@ namespace Компилятор
                     return;
             }
 
-            // Инициализируем модуль ввода-вывода
             InputOutput.Init(selectedPath);
             
-            // Запускаем обход по символам
             while (!InputOutput.IsEndOfFile)
             {
-                // Проходимся по ключам (символам) нашего словаря правил без использования LINQ
                 foreach (char triggerChar in InputOutput.ErrorRules.Keys)
                 {
                     if (InputOutput.Ch == triggerChar)
                     {
-                        // Извлекаем код и описание по совпавшему символу
                         var rule = InputOutput.ErrorRules[triggerChar];
-                        
-                        // Регистрируем ошибку
                         InputOutput.Error(rule.Code, InputOutput.PositionNow, rule.Desc);
                         break; 
                     }
