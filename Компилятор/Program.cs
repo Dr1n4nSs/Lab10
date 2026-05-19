@@ -13,73 +13,44 @@ namespace Компилятор
             
             Console.WriteLine("=== Тестирование модуля ввода-вывода ===\n");
 
-            Console.WriteLine("Выберите тест: ");
-            string option = Console.ReadLine();;
+            Console.WriteLine("Выберите тест (1, 2, 3): ");
+            string option = Console.ReadLine();
             int cur_option = int.Parse(option);
             
+            string selectedPath = "";
+
             switch (cur_option)
             {
-                case 1: 
-                    InputOutput.Init(path1);
-                    while (!InputOutput.IsEndOfFile)
-                    {
-                        if (InputOutput.Ch == '@')
-                        {
-                            InputOutput.Error(1, InputOutput.PositionNow);
-                        }
-                        if (InputOutput.Ch == '#')
-                        {
-                            InputOutput.Error(2, InputOutput.PositionNow);
-                        }
-                        if (InputOutput.Ch == '^')
-                        {
-                            InputOutput.Error(3, InputOutput.PositionNow);
-                        }
-
-                        InputOutput.NextCh();
-                    }
-                    break;
-                case 2: InputOutput.Init(path2); 
-                    while (!InputOutput.IsEndOfFile)
-                    {
-                        if (InputOutput.Ch == '@')
-                        {
-                            InputOutput.Error(1, InputOutput.PositionNow);
-                        }
-                        if (InputOutput.Ch == '#')
-                        {
-                            InputOutput.Error(2, InputOutput.PositionNow);
-                        }
-                        if (InputOutput.Ch == '^')
-                        {
-                            InputOutput.Error(3, InputOutput.PositionNow);
-                        }
-
-                        InputOutput.NextCh();
-                    }
-                    break;
-                case 3: InputOutput.Init(path3); 
-                    while (!InputOutput.IsEndOfFile)
-                    {
-                        if (InputOutput.Ch == '@')
-                        {
-                            InputOutput.Error(1, InputOutput.PositionNow);
-                        }
-                        if (InputOutput.Ch == '#')
-                        {
-                            InputOutput.Error(2, InputOutput.PositionNow);
-                        }
-                        if (InputOutput.Ch == '^')
-                        {
-                            InputOutput.Error(3, InputOutput.PositionNow);
-                        }
-
-                        InputOutput.NextCh();
-                    }
-                    break;
-                default: Console.WriteLine("Заданного теста не существует"); break;
+                case 1: selectedPath = path1; break;
+                case 2: selectedPath = path2; break;
+                case 3: selectedPath = path3; break;
+                default: 
+                    Console.WriteLine("Заданного теста не существует"); 
+                    return;
             }
+
+            // Инициализируем модуль ввода-вывода
+            InputOutput.Init(selectedPath);
             
+            // Запускаем обход по символам
+            while (!InputOutput.IsEndOfFile)
+            {
+                // Проходимся по ключам (символам) нашего словаря правил без использования LINQ
+                foreach (char triggerChar in InputOutput.ErrorRules.Keys)
+                {
+                    if (InputOutput.Ch == triggerChar)
+                    {
+                        // Извлекаем код и описание по совпавшему символу
+                        var rule = InputOutput.ErrorRules[triggerChar];
+                        
+                        // Регистрируем ошибку
+                        InputOutput.Error(rule.Code, InputOutput.PositionNow, rule.Desc);
+                        break; 
+                    }
+                }
+
+                InputOutput.NextCh();
+            }
         }
     }
 }
