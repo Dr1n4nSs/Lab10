@@ -4,32 +4,6 @@ using System.IO;
 
 namespace Компилятор
 {
-    public struct TextPosition
-    {
-        public uint lineNumber;
-        public byte charNumber;
-
-        public TextPosition(uint ln = 0, byte c = 0)
-        {
-            lineNumber = ln;
-            charNumber = c;
-        }
-    }
-
-    public struct Err
-    {
-        public TextPosition errorPosition;
-        public byte errorCode;
-        public string errorDescription;
-
-        public Err(TextPosition errorPosition, byte errorCode, string errorDescription)
-        {
-            this.errorPosition = errorPosition;
-            this.errorCode = errorCode;
-            this.errorDescription = errorDescription;
-        }
-    }
-
     public static class InputOutput
     {
         private const byte ERRMAX = 9;
@@ -43,32 +17,47 @@ namespace Компилятор
         private static List<Err> _err;
         private static List<Err> _allErrors;
         private static StreamReader _fileReader;
-        private static uint _errCount = 0;
+        private static uint _errCount;
         private static bool _isEndOfFile;
         
         public static char Ch
         {
-            get { return _ch; }
+            get
+            {
+                return _ch;
+            }
         }
 
         public static TextPosition PositionNow
         {
-            get { return _positionNow; }
+            get
+            {
+                return _positionNow;
+            }
         }
 
         public static bool IsEndOfFile
         {
-            get { return _isEndOfFile; }
+            get
+            {
+                return _isEndOfFile;
+            }
         }
 
         public static List<Err> ErrList
         {
-            get { return _err; }
+            get
+            {
+                return _err;
+            }
         }
 
         public static Dictionary<char, (byte Code, string Desc)> ErrorRules
         {
-            get { return _errorRules; }
+            get
+            {
+                return _errorRules;
+            }
         }
 
         public static void Init(string filePath)
@@ -122,7 +111,7 @@ namespace Компилятор
         {
             if (_isEndOfFile) return;
 
-            if (_positionNow.charNumber >= _lastInLine)
+            if (PositionNow.CharNumber >= _lastInLine)
             {
                 ListThisLine();
                 if (_err.Count > 0)
@@ -134,18 +123,18 @@ namespace Компилятор
 
                 if (_isEndOfFile) return;
 
-                _positionNow.lineNumber++;
-                _positionNow.charNumber = 0;
+                _positionNow.LineNumber++;
+                _positionNow.CharNumber = 0;
                 _lastInLine = _line.Length - 1;
             }
             else
             {
-                _positionNow.charNumber++;
+                _positionNow.CharNumber++;
             }
 
             if (_line.Length > 0)
             {
-                _ch = _line[_positionNow.charNumber];
+                _ch = _line[_positionNow.CharNumber];
             }
             else
             {
@@ -155,7 +144,7 @@ namespace Компилятор
 
         private static void ListThisLine()
         {
-            Console.WriteLine($"{_positionNow.lineNumber, 4} | {_line}");
+            Console.WriteLine($"{_positionNow.LineNumber, 4} | {_line}");
         }
 
         private static void ReadNextLine()
@@ -188,10 +177,9 @@ namespace Компилятор
                 Console.WriteLine("Список всех зарегистрированных ошибок:");
                 foreach (Err error in _allErrors)
                 {
-                    // Выводим красивое текстовое описание ошибки из структуры Err
-                    Console.WriteLine($"**{i:D2}** Ошибка {error.errorCode} ({error.errorDescription}) " +
-                                      $"в строке {error.errorPosition.lineNumber} " +
-                                      $"на позиции {error.errorPosition.charNumber}");
+                    Console.WriteLine($"**{i:D2}** Ошибка {error.ErrorCode} ({error.ErrorDescription}) " +
+                                      $"в строке {error.ErrorPosition.LineNumber} " +
+                                      $"на позиции {error.ErrorPosition.CharNumber}");
                     i++;
                 }
                 Console.WriteLine("----------------------------------------");
@@ -207,8 +195,8 @@ namespace Компилятор
             foreach (Err item in _err)
             {
                 _errCount++;
-                prefix = $"**{_errCount:D2}**";
-                spacesCount = 7 + (int)item.errorPosition.charNumber;
+                prefix = $"**{_errCount - 1 :D2}**";
+                spacesCount = 7 + (int)item.ErrorPosition.CharNumber;
                 
                 arrows = "";
                 for (int i = 0; i < spacesCount; i++)
@@ -216,7 +204,7 @@ namespace Компилятор
                     arrows += " ";
                 }
 
-                Console.WriteLine($"{prefix} {arrows}^ ошибка с кодом {item.errorCode}");
+                Console.WriteLine($"{prefix} {arrows}^ ошибка с кодом {item.ErrorCode}");
             }
             _err.Clear();
         }
