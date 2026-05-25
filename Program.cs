@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 
@@ -13,7 +13,7 @@ namespace Компилятор
             string path3 = "source_test3.pas";
             string resultPath = "codes.txt";
             
-            Console.WriteLine("=== Тестирование модуля ввода-вывода и Лексического анализатора ===\n");
+            Console.WriteLine("=== Тестирование Лексического анализатора ===\n");
 
             Console.WriteLine("Выберите тест (1, 2, 3): ");
             string option = Console.ReadLine();
@@ -30,20 +30,19 @@ namespace Компилятор
                     Console.WriteLine("Заданного теста не существует"); 
                     return;
             }
-            
+
             if (!File.Exists(selectedPath))
             {
-                Console.WriteLine($"Перед запуском теста создайте файл {selectedPath} и заполните его кодом Паскаля.");
+                Console.WriteLine($"Ошибка: Файл {selectedPath} не найден. Подготовьте его перед запуском.");
                 Console.ReadKey();
                 return;
             }
 
-            // Инициализация модулей
             InputOutput.Init(selectedPath);
             LexicalAnalyzer.Init();
 
             List<byte> tokenCodes = new List<byte>();
-            
+
             while (!InputOutput.IsEndOfFile)
             {
                 byte code = LexicalAnalyzer.Scan();
@@ -52,7 +51,7 @@ namespace Компилятор
                     tokenCodes.Add(code);
                 }
             }
-            
+
             try
             {
                 using (StreamWriter sw = new StreamWriter(resultPath))
@@ -72,6 +71,8 @@ namespace Компилятор
             {
                 Console.WriteLine($"Ошибка при записи файла результатов: {ex.Message}");
             }
+
+            Console.ReadKey();
         }
     }
 }
