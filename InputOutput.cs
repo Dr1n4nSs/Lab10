@@ -1,4 +1,4 @@
-   using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -74,6 +74,9 @@ namespace Компилятор
             _allErrors = new List<Err>();
 
             _errorRules = new Dictionary<byte, string>();
+            _errorRules.Add(1, "Нахождение недопустимого символа '@'");
+            _errorRules.Add(2, "Нахождение недопустимого символа '#'");
+            _errorRules.Add(3, "Нахождение недопустимого символа '^'");
             _errorRules.Add(4, "Выход целого числа за пределы допустимого диапазона [-32768..32767]");
             _errorRules.Add(5, "Ошибка: Открытая фигурная скобка '{' не закрыта до конца файла");
             _errorRules.Add(6, "Ошибка: Одиночная закрывающая фигурная скобка '}' без открывающей");
@@ -164,15 +167,32 @@ namespace Компилятор
             }
             else
             {
+                // Принудительно выводим последнюю строку перед завершением, если она не пустая
+                if (!_isEndOfFile)
+                {
+                    ListThisLine();
+                    if (_err.Count > 0)
+                    {
+                        ListErrors();
+                    }
+                }
                 End();
             }
         }
 
         private static void End()
         {
+            if (_isEndOfFile) return;
+
             _isEndOfFile = true;
             _ch = '\0';
             _fileReader.Close();
+            
+            // Если какие-то ошибки были добавлены в самый последний момент (например, конец файла)
+            if (_err.Count > 0)
+            {
+                ListErrors();
+            }
             
             Console.WriteLine("\n----------------------------------------");
             Console.WriteLine($"Компиляция завершена. Всего ошибок выведено на листинг: {_errCount}");
@@ -193,7 +213,7 @@ namespace Компилятор
             }
         }
 
-        private static void ListErrors()
+        public static void ListErrors()
         {
             foreach (Err item in _err)
             {
@@ -228,4 +248,4 @@ namespace Компилятор
             }
         }
     }
-}                 
+}
