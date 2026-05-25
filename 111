@@ -1,0 +1,94 @@
+// ... (Внутри метода Scan() класса LexicalAnalyzer)
+
+// 2. Многострочный комментарий '{ }'
+if (InputOutput.Ch == '{')
+{
+    TextPosition commentStart = InputOutput.PositionNow;
+    InputOutput.NextCh();
+    
+    while (!InputOutput.IsEndOfFile && InputOutput.Ch != '}')
+    {
+        InputOutput.NextCh();
+    }
+
+    if (InputOutput.IsEndOfFile)
+    {
+        InputOutput.Error(5, commentStart); // Не закрыт '{'
+        InputOutput.ListErrors();           // Принудительный вывод на листинг
+        return 0;
+    }
+
+    InputOutput.NextCh(); // Пропускаем '}'
+    continue;
+}
+
+// Ошибка: встретили '}' без открывающей '{'
+if (InputOutput.Ch == '}')
+{
+    InputOutput.Error(6, InputOutput.PositionNow);
+    InputOutput.ListErrors(); // Чтобы сразу отобразить стрелочку под некорректным символом
+    InputOutput.NextCh();
+    continue;
+}
+
+// 3. Многострочный комментарий '(* *)'
+if (InputOutput.Ch == '（' || InputOutput.Ch == '(') // Учитываем круглую скобку
+{
+    TextPosition pos = InputOutput.PositionNow;
+    InputOutput.NextCh();
+    if (InputOutput.Ch == '*')
+    {
+        TextPosition commentStart = pos;
+        InputOutput.NextCh(); 
+        
+        bool closed = false;
+        while (!InputOutput.IsEndOfFile)
+        {
+            if (InputOutput.Ch == '*')
+            {
+                InputOutput.NextCh();
+                if (InputOutput.Ch == ')')
+                {
+                    InputOutput.NextCh();
+                    closed = true;
+                    break;
+                }
+            }
+            else
+            {
+                InputOutput.NextCh();
+            }
+        }
+
+        if (!closed)
+        {
+            InputOutput.Error(7, commentStart); // Не закрыт '(*'
+            InputOutput.ListErrors();           // Принудительный вывод на листинг
+            return 0;
+        }
+        continue;
+    }
+    else
+    {
+        if (_tokenCodes.ContainsKey("(")) return _tokenCodes["("];
+    }
+}
+
+// Ошибка: встретили '*)' без открывающего '(*'
+if (InputOutput.Ch == '*')
+{
+    TextPosition pos = InputOutput.PositionNow;
+    InputOutput.NextCh();
+    if (InputOutput.Ch == ')')
+    {
+        InputOutput.Error(8, pos); 
+        InputOutput.ListErrors(); // Мгновенный вывод стрелочки листинга
+        InputOutput.NextCh();
+        continue;
+    }
+    else
+    {
+        if (_tokenCodes.ContainsKey("*")) return _tokenCodes["*"];
+    }
+}
+// ...
