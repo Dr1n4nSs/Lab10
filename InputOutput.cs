@@ -79,6 +79,8 @@ namespace Компилятор
             _errorRules.Add(3, "Нахождение недопустимого символа '^'");
             _errorRules.Add(4, "Выход целого числа за пределы допустимого диапазона [-32768..32767]");
             _errorRules.Add(5, "Ошибка: Открытая фигурная скобка '{' не закрыта до конца файла");
+            _errorRules.Add(6, "Ошибка: Одиночная закрывающая фигурная скобка '}' без открывающей");
+            _errorRules.Add(7, "Ошибка: Одиночная закрывающая круглая скобка ')' без открывающей");
 
             try
             {
@@ -151,7 +153,7 @@ namespace Компилятор
 
         private static void ListThisLine()
         {
-            Console.WriteLine($"{_positionNow.lineNumber, 4} | {_line}");
+            Console.WriteLine($"{_positionNow.lineNumber + 1, 4} | {_line}");
         }
 
         private static void ReadNextLine()
@@ -175,7 +177,7 @@ namespace Компилятор
             _fileReader.Close();
             
             Console.WriteLine("\n----------------------------------------");
-            Console.WriteLine($"Компиляция завершена. Всего выведено ошибок: {_errCount}");
+            Console.WriteLine($"Компиляция завершена. Всего ошибок выведено на листинг: {_errCount}");
             Console.WriteLine("----------------------------------------");
             
             if (_allErrors.Count > 0)
@@ -185,8 +187,8 @@ namespace Компилятор
                 foreach (Err error in _allErrors)
                 {
                     Console.WriteLine($"**{i:D2}** Ошибка {error.errorCode} ({error.errorDescription}) " +
-                                      $"в строке {error.errorPosition.lineNumber} " +
-                                      $"на позиции {error.errorPosition.charNumber}");
+                                      $"в строке {error.errorPosition.lineNumber + 1} " +
+                                      $"на позиции {error.errorPosition.charNumber + 1}");
                     i++;
                 }
                 Console.WriteLine("----------------------------------------");
@@ -199,8 +201,6 @@ namespace Компилятор
             {
                 _errCount++;
                 string prefix = $"**{_errCount:D2}**";
-                
-                // Смещение на 7 символов под префикс "   0 | "
                 int spacesCount = 7 + (int)item.errorPosition.charNumber;
                 
                 string arrows = "";
@@ -231,4 +231,3 @@ namespace Компилятор
         }
     }
 }
-    
