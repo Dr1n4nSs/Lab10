@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Collections.Generic;
 
@@ -33,7 +33,7 @@ namespace Компилятор
 
             if (!File.Exists(selectedPath))
             {
-                Console.WriteLine($"Ошибка: Файл {selectedPath} не найден. Подготовьте его перед запуском.");
+                Console.WriteLine($"Ошибка: Файл {selectedPath} не найден.");
                 Console.ReadKey();
                 return;
             }
@@ -52,6 +52,8 @@ namespace Компилятор
                 }
             }
 
+            InputOutput.End();
+
             try
             {
                 using (StreamWriter sw = new StreamWriter(resultPath))
@@ -65,14 +67,12 @@ namespace Компилятор
                         }
                     }
                 }
-                Console.WriteLine($"\nКоды успешно сохранены в файл: {resultPath}");
+                Console.WriteLine($"\nКоды лексем успешно сохранены в файл: {resultPath}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Ошибка при записи файла результатов: {ex.Message}");
             }
-
-            Console.ReadKey();
         }
     }
 }

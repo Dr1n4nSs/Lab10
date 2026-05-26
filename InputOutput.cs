@@ -4,31 +4,6 @@ using System.IO;
 
 namespace Компилятор
 {
-    public struct TextPosition
-    {
-        public uint lineNumber;
-        public byte charNumber;
-
-        public TextPosition(uint ln = 0, byte c = 0)
-        {
-            lineNumber = ln;
-            charNumber = c;
-        }
-    }
-
-    public struct Err
-    {
-        public TextPosition errorPosition;
-        public byte errorCode;
-        public string errorDescription;
-
-        public Err(TextPosition errorPosition, byte errorCode, string errorDescription)
-        {
-            this.errorPosition = errorPosition;
-            this.errorCode = errorCode;
-            this.errorDescription = errorDescription;
-        }
-    }
 
     public static class InputOutput
     {
@@ -42,28 +17,15 @@ namespace Компилятор
         private static List<Err> _err;
         private static List<Err> _allErrors;
         private static StreamReader _fileReader;
+        private static List<string> _fileLines; // Хранилище всех строк файла для Lookahead без перезапуска
         private static uint _errCount = 0;
         private static bool _isEndOfFile;
         
-        public static char Ch
-        {
-            get { return _ch; }
-        }
-
-        public static TextPosition PositionNow
-        {
-            get { return _positionNow; }
-        }
-
-        public static bool IsEndOfFile
-        {
-            get { return _isEndOfFile; }
-        }
-
-        public static List<Err> ErrList
-        {
-            get { return _err; }
-        }
+        public static char Ch { get { return _ch; } }
+        public static TextPosition PositionNow { get { return _positionNow; } }
+        public static bool IsEndOfFile { get { return _isEndOfFile; } }
+        public static List<Err> ErrList { get { return _err; } }
+        public static List<string> FileLines { get { return _fileLines; } }
 
         public static void Init(string filePath)
         {
@@ -72,6 +34,7 @@ namespace Компилятор
             _isEndOfFile = false;
             _err = new List<Err>();
             _allErrors = new List<Err>();
+            _fileLines = new List<string>();
 
             _errorRules = new Dictionary<byte, string>();
             _errorRules.Add(1, "Нахождение недопустимого символа '@'");
@@ -82,113 +45,76 @@ namespace Компилятор
             _errorRules.Add(6, "Ошибка: Одиночная закрывающая фигурная скобка '}' без открывающей");
             _errorRules.Add(7, "Ошибка: Комментарий '(*' не закрыт до конца файла");
             _errorRules.Add(8, "Ошибка: Одиночный закрывающий символ комментария '*)' без открывающего");
+            _errorRules.Add(9, "Ошибка: Одиночная закрывающая круглая скобка ')' без открывающей");
+            _errorRules.Add(11, "Ошибка: Одиночная открывающая круглая скобка '(' без закрывающей");
 
             try
             {
-                string directory = Path.GetDirectoryName(filePath);
-
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                using (StreamReader sr = new StreamReader(filePath))
                 {
-                    Directory.CreateDirectory(directory);
+                    while (!sr.EndOfStream)
+                    {
+                        _fileLines.Add(sr.ReadLine() + " ");
+                    }
                 }
-
-                if (!File.Exists(filePath))
+                if (_fileLines.Count == 0)
                 {
-                    using (File.Create(filePath)) { } 
+                    _fileLines.Add(" ");
                 }
-
-                _fileReader = new StreamReader(filePath);
             }
             catch (Exception ex)
             {
-                throw new IOException($"Не удалось подготовить файл или директорию: {ex.Message}", ex);
+                throw new IOException($"Не удалось прочитать файл: {ex.Message}", ex);
             }
 
-            ReadNextLine();
-
-            if (_line.Length > 0)
-            {
-                _ch = _line[0];
-                _lastInLine = _line.Length - 1;
-            }
-            else
-            {
-                _ch = ' ';
-            }
+            _line = _fileLines[0];
+            _ch = _line[0];
+            _lastInLine = _line.Length - 1;
+            
+            ListThisLine();
         }
 
         public static void NextCh()
         {
             if (_isEndOfFile) return;
 
-            if (_positionNow.charNumber >= _lastInLine)
+            if (_positionNow.CharNumber >= _lastInLine)
             {
-                ListThisLine();
                 if (_err.Count > 0)
                 {
                     ListErrors();
                 }
 
-                ReadNextLine();
-
-                if (_isEndOfFile) return;
-
-                _positionNow.lineNumber++;
-                _positionNow.charNumber = 0;
-                _lastInLine = _line.Length - 1;
+                _positionNow.LineNumber++;
+                if (_positionNow.LineNumber < _fileLines.Count)
+                {
+                    _line = _fileLines[(int)_positionNow.LineNumber];
+                    _positionNow.CharNumber = 0;
+                    _lastInLine = _line.Length - 1;
+                    ListThisLine();
+                }
+                else
+                {
+                    _isEndOfFile = true;
+                    _ch = '\0';
+                    return;
+                }
             }
             else
             {
-                _positionNow.charNumber++;
+                _positionNow.CharNumber++;
             }
 
-            if (_line.Length > 0)
-            {
-                _ch = _line[_positionNow.charNumber];
-            }
-            else
-            {
-                _ch = ' ';
-            }
+            _ch = _line[_positionNow.CharNumber];
         }
 
         private static void ListThisLine()
         {
-            Console.WriteLine($"{_positionNow.lineNumber + 1, 4} | {_line}");
+            Console.WriteLine($"{_positionNow.LineNumber + 1, 4} | {_line}");
         }
 
-        private static void ReadNextLine()
+        public static void End()
         {
-            if (!_fileReader.EndOfStream)
-            {
-                _line = _fileReader.ReadLine();
-                _line += " "; 
-                _err = new List<Err>();
-            }
-            else
-            {
-                // Принудительно выводим последнюю строку перед завершением, если она не пустая
-                if (!_isEndOfFile)
-                {
-                    ListThisLine();
-                    if (_err.Count > 0)
-                    {
-                        ListErrors();
-                    }
-                }
-                End();
-            }
-        }
-
-        private static void End()
-        {
-            if (_isEndOfFile) return;
-
-            _isEndOfFile = true;
-            _ch = '\0';
-            _fileReader.Close();
-            
-            // Если какие-то ошибки были добавлены в самый последний момент (например, конец файла)
             if (_err.Count > 0)
             {
                 ListErrors();
@@ -204,9 +130,9 @@ namespace Компилятор
                 Console.WriteLine("Список всех зарегистрированных ошибок:");
                 foreach (Err error in _allErrors)
                 {
-                    Console.WriteLine($"**{i:D2}** Ошибка {error.errorCode} ({error.errorDescription}) " +
-                                      $"в строке {error.errorPosition.lineNumber + 1} " +
-                                      $"на позиции {error.errorPosition.charNumber + 1}");
+                    Console.WriteLine($"**{i:D2}** Ошибка {error.ErrorCode} ({error.ErrorDescription}) " +
+                                      $"в строке {error.ErrorPosition.LineNumber + 1} " +
+                                      $"на позиции {error.ErrorPosition.CharNumber + 1}");
                     i++;
                 }
                 Console.WriteLine("----------------------------------------");
@@ -219,7 +145,7 @@ namespace Компилятор
             {
                 _errCount++;
                 string prefix = $"**{_errCount:D2}**";
-                int spacesCount = 7 + (int)item.errorPosition.charNumber;
+                int spacesCount = (int)item.ErrorPosition.CharNumber;
                 
                 string arrows = "";
                 for (int i = 0; i < spacesCount; i++)
@@ -227,7 +153,7 @@ namespace Компилятор
                     arrows += " ";
                 }
 
-                Console.WriteLine($"{prefix} {arrows}^ ошибка с кодом {item.errorCode}");
+                Console.WriteLine($"{prefix} {arrows}^ ошибка с кодом {item.ErrorCode}");
             }
             _err.Clear();
         }

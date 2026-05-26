@@ -6,14 +6,14 @@ namespace Компилятор
     public static class LexicalAnalyzer
     {
         private static Dictionary<string, byte> _keywords;
-        private static Dictionary<string, byte> _tokenCodes; // Единый словарь для кодов всех лексем
-        
+        private static Dictionary<string, byte> _tokenCodes;
+        private static int _roundBracketBalance; // Баланс для контроля одиночных закрывающих скобок
+
         private const int MAX_PASCAL_INT = 32767;
         private const int MIN_PASCAL_INT = -32768;
 
         public static void Init()
         {
-            // 1. Справочник ключевых слов
             _keywords = new Dictionary<string, byte>();
             _keywords.Add("program", 3);
             _keywords.Add("var", 3);
@@ -22,12 +22,9 @@ namespace Компилятор
             _keywords.Add("end", 3);
             _keywords.Add("integer", 3);
 
-            // 2. Все коды символов и лексем теперь берутся из этого словаря
             _tokenCodes = new Dictionary<string, byte>();
-            _tokenCodes.Add("identifier", 100); // Код для пользовательских идентификаторов
-            _tokenCodes.Add("number", 200);     // Код для целых чисел
-            
-            // Коды символов пунктуации и операций (из ASCII или по вашей спецификации)
+            _tokenCodes.Add("identifier", 100); 
+            _tokenCodes.Add("number", 200);     
             _tokenCodes.Add("*", 21);
             _tokenCodes.Add("/", 60);
             _tokenCodes.Add("=", 16);
@@ -38,21 +35,61 @@ namespace Компилятор
             _tokenCodes.Add(">", 62);
             _tokenCodes.Add("(", 40);
             _tokenCodes.Add(")", 41);
-            _tokenCodes.Add(":=", 99);          // Код для составного оператора присваивания
+            _tokenCodes.Add(":=", 99);          
+
+            _roundBracketBalance = 0;
+        }
+
+        /// <summary>
+        /// Виртуальный просмотр сохраненных строк вперед без нарушения позиции чтения файла.
+        /// </summary>
+        private static bool LookaheadForClosing(string openType)
+        {
+            uint rLine = InputOutput.PositionNow.LineNumber;
+            int rChar = InputOutput.PositionNow.CharNumber;
+
+            // Пропускаем саму открывающую скобку/символ
+            if (openType == "(*") rChar += 2;
+            else rChar += 1;
+
+            while (rLine < InputOutput.FileLines.Count)
+            {
+                string line = InputOutput.FileLines[(int)rLine];
+                while (rChar < line.Length)
+                {
+                    char ch = line[rChar];
+
+                    if (openType == "{")
+                    {
+                        if (ch == '}') return true;
+                    }
+                    else if (openType == "(*")
+                    {
+                        if (ch == '*' && rChar + 1 < line.Length && line[rChar + 1] == ')') return true;
+                    }
+                    else if (openType == "(")
+                    {
+                        if (ch == ')') return true;
+                    }
+
+                    rChar++;
+                }
+                rLine++;
+                rChar = 0;
+            }
+
+            return false;
         }
 
         public static byte Scan()
         {
             while (!InputOutput.IsEndOfFile)
             {
-                // Пропускаем пробельные символы
                 if (InputOutput.Ch == ' ' || InputOutput.Ch == '\r' || InputOutput.Ch == '\n' || InputOutput.Ch == '\t')
                 {
                     InputOutput.NextCh();
                     continue;
                 }
-
-                // --- АНАЛИЗ ВСЕХ ВИДОВ КОММЕНТАРИЕВ ---
 
                 // 1. Однострочный комментарий '//'
                 if (InputOutput.Ch == '/')
@@ -61,9 +98,8 @@ namespace Компилятор
                     InputOutput.NextCh();
                     if (InputOutput.Ch == '/')
                     {
-                        // Обнаружен '//', считываем всё до конца текущей строки
-                        uint currentLine = pos.lineNumber;
-                        while (!InputOutput.IsEndOfFile && InputOutput.PositionNow.lineNumber == currentLine)
+                        uint currentLine = pos.LineNumber;
+                        while (!InputOutput.IsEndOfFile && InputOutput.PositionNow.LineNumber == currentLine)
                         {
                             InputOutput.NextCh();
                         }
@@ -71,8 +107,6 @@ namespace Компилятор
                     }
                     else
                     {
-                        // Это не комментарий, а одиночный слэш. Возвращаем позицию назад логически
-                        // Так как мы уже вызвали NextCh(), обработаем текущий слэш как знак деления ниже
                         if (_tokenCodes.ContainsKey("/")) return _tokenCodes["/"];
                     }
                 }
@@ -81,43 +115,51 @@ namespace Компилятор
                 if (InputOutput.Ch == '{')
                 {
                     TextPosition commentStart = InputOutput.PositionNow;
-                    InputOutput.NextCh();
                     
+                    if (!LookaheadForClosing("{"))
+                    {
+                        InputOutput.Error(5, commentStart);
+                        InputOutput.ListErrors(); // Выводим ТУТ ЖЕ под текущей строкой листинга
+                        InputOutput.NextCh();
+                        continue;
+                    }
+
+                    InputOutput.NextCh();
                     while (!InputOutput.IsEndOfFile && InputOutput.Ch != '}')
                     {
                         InputOutput.NextCh();
                     }
-
-                    if (InputOutput.IsEndOfFile)
-                    {
-                        InputOutput.Error(5, commentStart); // Не закрыт '{'
-                        return 0;
-                    }
-
-                    InputOutput.NextCh(); // Пропускаем '}'
+                    InputOutput.NextCh(); 
                     continue;
                 }
 
-                // Ошибка: встретили '}' без открывающей '{'
                 if (InputOutput.Ch == '}')
                 {
                     InputOutput.Error(6, InputOutput.PositionNow);
+                    InputOutput.ListErrors();
                     InputOutput.NextCh();
                     continue;
                 }
 
-                // 3. Многострочный комментарий '(* *)'
+                // 3. Круглые скобки и комментарии '(* *)'
                 if (InputOutput.Ch == '(')
                 {
                     TextPosition pos = InputOutput.PositionNow;
                     InputOutput.NextCh();
+                    
                     if (InputOutput.Ch == '*')
                     {
-                        // Обнаружено начало комментария '(*'
                         TextPosition commentStart = pos;
-                        InputOutput.NextCh(); // Шаг за '*'
-                        
-                        bool closed = false;
+
+                        if (!LookaheadForClosing("(*"))
+                        {
+                            InputOutput.Error(7, commentStart);
+                            InputOutput.ListErrors(); // Мгновенный вывод под строкой
+                            InputOutput.NextCh();
+                            continue;
+                        }
+
+                        InputOutput.NextCh();
                         while (!InputOutput.IsEndOfFile)
                         {
                             if (InputOutput.Ch == '*')
@@ -126,7 +168,6 @@ namespace Компилятор
                                 if (InputOutput.Ch == ')')
                                 {
                                     InputOutput.NextCh();
-                                    closed = true;
                                     break;
                                 }
                             }
@@ -135,35 +176,36 @@ namespace Компилятор
                                 InputOutput.NextCh();
                             }
                         }
-
-                        if (!closed)
-                        {
-                            InputOutput.Error(7, commentStart); // Не закрыт '(*'
-                            return 0;
-                        }
                         continue;
                     }
                     else
                     {
-                        // Это была просто открывающая круглая скобка '('
+                        // Обычная открывающая скобка '('
+                        if (!LookaheadForClosing("("))
+                        {
+                            InputOutput.Error(11, pos);
+                            InputOutput.ListErrors(); // Мгновенный вывод под строкой
+                            if (_tokenCodes.ContainsKey("(")) return _tokenCodes["("];
+                        }
+
+                        _roundBracketBalance++;
                         if (_tokenCodes.ContainsKey("(")) return _tokenCodes["("];
                     }
                 }
 
-                // Ошибка: встретили '*)' без открывающего '(*'
                 if (InputOutput.Ch == '*')
                 {
                     TextPosition pos = InputOutput.PositionNow;
                     InputOutput.NextCh();
                     if (InputOutput.Ch == ')')
                     {
-                        InputOutput.Error(8, pos); // Одиночный '*)'
+                        InputOutput.Error(8, pos); 
+                        InputOutput.ListErrors();
                         InputOutput.NextCh();
                         continue;
                     }
                     else
                     {
-                        // Это просто одиночная звездочка '*'
                         if (_tokenCodes.ContainsKey("*")) return _tokenCodes["*"];
                     }
                 }
@@ -173,9 +215,8 @@ namespace Компилятор
 
             if (InputOutput.IsEndOfFile) return 0;
 
-            // --- ОБРАБОТКА ЛЕКСЕМ ---
+            // --- ОБРАБОТКА ИДЕНТИФИКАТОРОВ И ЧИСЕЛ ---
 
-            // 1. ИДЕНТИФИКАТОРЫ И КЛЮЧЕВЫЕ СЛОВА
             if (char.IsLetter(InputOutput.Ch))
             {
                 string word = "";
@@ -184,21 +225,13 @@ namespace Компилятор
                     word += InputOutput.Ch;
                     InputOutput.NextCh();
                 }
-
                 word = word.ToLower();
 
-                // Если это ключевое слово — у него свой код из таблицы ключевых слов
-                if (_keywords.ContainsKey(word))
-                {
-                    return _keywords[word];
-                }
-
-                // Иначе — это пользовательский идентификатор (код берем из словаря)
+                if (_keywords.ContainsKey(word)) return _keywords[word];
                 if (_tokenCodes.ContainsKey("identifier")) return _tokenCodes["identifier"];
                 return 0;
             }
 
-            // 2. ЦЕЛОЧИСЛЕННЫЕ ЗНАЧЕНИЯ
             if (char.IsDigit(InputOutput.Ch))
             {
                 string numStr = "";
@@ -227,7 +260,7 @@ namespace Компилятор
                 return 0;
             }
 
-            // 3. ЗНАКИ ОПЕРАЦИЙ И СИМВОЛЫ ИЗ СЛОВАРЯ
+            // --- ЗНАКИ ОПЕРАЦИЙ ---
             char currentCh = InputOutput.Ch;
 
             if (currentCh == ':')
@@ -241,7 +274,30 @@ namespace Компилятор
                 if (_tokenCodes.ContainsKey(":")) return _tokenCodes[":"];
             }
 
-            // Для всех базовых одиночных символов
+            if (currentCh == ')')
+            {
+                _roundBracketBalance--;
+                
+                // Если баланс ушел в минус — значит, встретилась одиночная закрывающая скобка ) без пары!
+                if (_roundBracketBalance < 0)
+                {
+                    InputOutput.Error(9, InputOutput.PositionNow);
+                    InputOutput.ListErrors(); // Выводим ошибку СТРОГО под текущим знаком )
+                    _roundBracketBalance = 0; // Сбрасываем баланс для дальнейшего разбора
+                }
+
+                if (_tokenCodes.ContainsKey(")"))
+                {
+                    byte code = _tokenCodes[")"];
+                    InputOutput.NextCh();
+                    return code;
+                }
+            }
+
+            if (currentCh == '@') { InputOutput.Error(1, InputOutput.PositionNow); InputOutput.ListErrors(); InputOutput.NextCh(); return 0; }
+            if (currentCh == '#') { InputOutput.Error(2, InputOutput.PositionNow); InputOutput.ListErrors(); InputOutput.NextCh(); return 0; }
+            if (currentCh == '^') { InputOutput.Error(3, InputOutput.PositionNow); InputOutput.ListErrors(); InputOutput.NextCh(); return 0; }
+
             string chStr = currentCh.ToString();
             if (_tokenCodes.ContainsKey(chStr))
             {
