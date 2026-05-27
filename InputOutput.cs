@@ -17,15 +17,49 @@ namespace Компилятор
         private static List<Err> _err;
         private static List<Err> _allErrors;
         private static StreamReader _fileReader;
-        private static List<string> _fileLines; // Хранилище всех строк файла для Lookahead без перезапуска
+        private static List<string> _fileLines; 
         private static uint _errCount = 0;
         private static bool _isEndOfFile;
-        
-        public static char Ch { get { return _ch; } }
-        public static TextPosition PositionNow { get { return _positionNow; } }
-        public static bool IsEndOfFile { get { return _isEndOfFile; } }
-        public static List<Err> ErrList { get { return _err; } }
-        public static List<string> FileLines { get { return _fileLines; } }
+
+        public static char Ch
+        {
+            get
+            {
+                return _ch;
+            }
+        }
+
+        public static TextPosition PositionNow
+        {
+            get
+            {
+                return _positionNow;
+            }
+        }
+
+        public static bool IsEndOfFile
+        {
+            get
+            {
+                return _isEndOfFile;
+            }
+        }
+
+        public static List<Err> ErrList
+        {
+            get
+            {
+                return _err;
+            }
+        }
+
+        public static List<string> FileLines
+        {
+            get
+            {
+                return _fileLines;
+            }
+        }
 
         public static void Init(string filePath)
         {
@@ -41,12 +75,13 @@ namespace Компилятор
             _errorRules.Add(2, "Нахождение недопустимого символа '#'");
             _errorRules.Add(3, "Нахождение недопустимого символа '^'");
             _errorRules.Add(4, "Выход целого числа за пределы допустимого диапазона [-32768..32767]");
-            _errorRules.Add(5, "Ошибка: Открытая фигурная скобка '{' не закрыта до конца файла");
-            _errorRules.Add(6, "Ошибка: Одиночная закрывающая фигурная скобка '}' без открывающей");
-            _errorRules.Add(7, "Ошибка: Комментарий '(*' не закрыт до конца файла");
-            _errorRules.Add(8, "Ошибка: Одиночный закрывающий символ комментария '*)' без открывающего");
-            _errorRules.Add(9, "Ошибка: Одиночная закрывающая круглая скобка ')' без открывающей");
-            _errorRules.Add(11, "Ошибка: Одиночная открывающая круглая скобка '(' без закрывающей");
+            _errorRules.Add(5, "Открытая фигурная скобка '{' не закрыта до конца файла");
+            _errorRules.Add(6, "Одиночная закрывающая фигурная скобка '}' без открывающей");
+            _errorRules.Add(7, "Комментарий '(*' не закрыт до конца файла");
+            _errorRules.Add(8, "Одиночный закрывающий символ комментария '*)' без открывающего");
+            _errorRules.Add(9, "Одиночная закрывающая круглая скобка ')' без открывающей");
+            _errorRules.Add(11, "Одиночная открывающая круглая скобка '(' без закрывающей");
+            _errorRules.Add(12, "Символьная строка не закрыта до конца текущей строки");
 
             try
             {
