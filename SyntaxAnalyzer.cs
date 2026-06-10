@@ -28,70 +28,31 @@ namespace Компилятор
 
         private static void ProgramBlock()
         {
+            // 1. Заголовок
             if (_currentToken == LexicalAnalyzer.GetTokenCode("program"))
             {
                 GetNextToken();
-                if (_currentToken == LexicalAnalyzer.GetTokenCode("identifier"))
-                {
-                    GetNextToken();
-                }
-                else
-                {
-                    InputOutput.Error(50, InputOutput.PositionNow); 
-                    InputOutput.ListErrors();
-                }
+                if (_currentToken == LexicalAnalyzer.GetTokenCode("identifier")) GetNextToken();
+                if (_currentToken == LexicalAnalyzer.GetTokenCode(";")) GetNextToken();
+            }
+            
+            SemanticAnalyzer.Init();
+            
+            while (_currentToken == LexicalAnalyzer.GetTokenCode("const") || _currentToken == LexicalAnalyzer.GetTokenCode("var"))
+            {
+                if (_currentToken == LexicalAnalyzer.GetTokenCode("const")) ConstDeclaration();
+                if (_currentToken == LexicalAnalyzer.GetTokenCode("var")) VarDeclaration();
+            }
 
-                if (_currentToken == LexicalAnalyzer.GetTokenCode(";"))
-                {
-                    GetNextToken();
-                }
-                else
-                {
-                    InputOutput.Error(51, InputOutput.PositionNow); 
-                    InputOutput.ListErrors();
-                }
-            }
-            
-            if (_currentToken == LexicalAnalyzer.GetTokenCode("const"))
-            {
-                ConstDeclaration();
-            }
-            
-            if (_currentToken == LexicalAnalyzer.GetTokenCode("var"))
-            {
-                VarDeclaration();
-            }
-            
-            if (_currentToken == LexicalAnalyzer.GetTokenCode("const"))
-            {
-                InputOutput.Error(62, InputOutput.PositionNow);
-                InputOutput.ListErrors();
-                ConstDeclaration(); 
-            }
-            
             while (_currentToken == LexicalAnalyzer.GetTokenCode("function"))
             {
                 FunctionDeclaration();
-                
-                if (_currentToken == LexicalAnalyzer.GetTokenCode("const") || _currentToken == LexicalAnalyzer.GetTokenCode("var"))
-                {
-                    InputOutput.Error(62, InputOutput.PositionNow);
-                    InputOutput.ListErrors();
-                    if (_currentToken == LexicalAnalyzer.GetTokenCode("const"))
-                    {
-                        ConstDeclaration();
-                    }
-                    else
-                    {
-                        VarDeclaration();
-                    }
-                }
             }
-
+            
             CompoundStatement();
 
             if (_currentToken == LexicalAnalyzer.GetTokenCode(".")) GetNextToken();
-            else { InputOutput.Error(52, InputOutput.PositionNow); InputOutput.ListErrors(); }
+            else InputOutput.Error(52, InputOutput.PositionNow);
         }
         
         private static void ConstDeclaration()
@@ -339,160 +300,7 @@ namespace Компилятор
                 GetNextToken();
             }
         }
-
-        private static void VarDeclaration()
-        {
-            GetNextToken();
-
-            while (_currentToken == LexicalAnalyzer.GetTokenCode("identifier"))
-            {
-                while (_currentToken == LexicalAnalyzer.GetTokenCode("identifier"))
-                {
-                    GetNextToken();
-                    if (_currentToken == LexicalAnalyzer.GetTokenCode(","))
-                    {
-                        GetNextToken();
-                        if (_currentToken != LexicalAnalyzer.GetTokenCode("identifier"))
-                        {
-                            InputOutput.Error(53, InputOutput.PositionNow); 
-                            InputOutput.ListErrors();
-                        }
-                    }
-                }
-
-                if (_currentToken == LexicalAnalyzer.GetTokenCode(":"))
-                {
-                    GetNextToken();
-                }
-                else
-                {
-                    InputOutput.Error(54, InputOutput.PositionNow);
-                    InputOutput.ListErrors();
-                    Neutralize(new List<byte> { LexicalAnalyzer.GetTokenCode(";"), LexicalAnalyzer.GetTokenCode("begin") });
-                }
-
-                if (IsTypeToken(_currentToken))
-                {
-                    ParseType();
-                }
-                else
-                {
-                    InputOutput.Error(55, InputOutput.PositionNow); 
-                    InputOutput.ListErrors();
-                }
-
-                if (_currentToken == LexicalAnalyzer.GetTokenCode(";"))
-                {
-                    GetNextToken();
-                }
-                else
-                {
-                    InputOutput.Error(51, InputOutput.PositionNow); 
-                    InputOutput.ListErrors();
-                    Neutralize(new List<byte> { LexicalAnalyzer.GetTokenCode("identifier"), LexicalAnalyzer.GetTokenCode("begin"), LexicalAnalyzer.GetTokenCode("function") });
-                }
-            }
-        }
-
-        private static void FunctionDeclaration()
-        {
-            GetNextToken();
-
-            if (_currentToken == LexicalAnalyzer.GetTokenCode("identifier"))
-            {
-                GetNextToken();
-            }
-            else
-            {
-                InputOutput.Error(56, InputOutput.PositionNow);
-                InputOutput.ListErrors();
-            }
-
-            if (_currentToken == LexicalAnalyzer.GetTokenCode("("))
-            {
-                GetNextToken();
-                while (_currentToken == LexicalAnalyzer.GetTokenCode("identifier"))
-                {
-                    GetNextToken();
-                    if (_currentToken == LexicalAnalyzer.GetTokenCode(":"))
-                    {
-                        GetNextToken();
-                    }
-
-                    if (IsTypeToken(_currentToken))
-                    {
-                        ParseType();
-                    }
-
-                    if (_currentToken == LexicalAnalyzer.GetTokenCode(";"))
-                    {
-                        GetNextToken();
-                    }
-                }
-
-                if (_currentToken == LexicalAnalyzer.GetTokenCode(")"))
-                {
-                    GetNextToken();
-                }
-                else
-                {
-                    InputOutput.Error(57, InputOutput.PositionNow);
-                    InputOutput.ListErrors();
-                }
-            }
-
-            if (_currentToken == LexicalAnalyzer.GetTokenCode(":"))
-            {
-                GetNextToken();
-                if (IsTypeToken(_currentToken))
-                {
-                    ParseType();
-                }
-                else
-                {
-                    InputOutput.Error(55, InputOutput.PositionNow);
-                    InputOutput.ListErrors();
-                }
-            }
-
-            if (_currentToken == LexicalAnalyzer.GetTokenCode(";"))
-            {
-                GetNextToken();
-            }
-            else
-            {
-                InputOutput.Error(51, InputOutput.PositionNow); 
-                InputOutput.ListErrors();
-            }
-
-            if (_currentToken == LexicalAnalyzer.GetTokenCode("const"))
-            {
-                ConstDeclaration();
-            }
-
-            if (_currentToken == LexicalAnalyzer.GetTokenCode("var"))
-            {
-                VarDeclaration();
-            }
-
-            if (_currentToken == LexicalAnalyzer.GetTokenCode("const"))
-            {
-                InputOutput.Error(62, InputOutput.PositionNow); InputOutput.ListErrors();
-                ConstDeclaration();
-            }
-
-            CompoundStatement();
-
-            if (_currentToken == LexicalAnalyzer.GetTokenCode(";"))
-            {
-                GetNextToken();
-            }
-            else
-            {
-                InputOutput.Error(51, InputOutput.PositionNow); 
-                InputOutput.ListErrors();
-            }
-        }
+        
 
         private static void CompoundStatement()
         {
@@ -547,14 +355,181 @@ namespace Компилятор
                 LexicalAnalyzer.GetTokenCode("end")
             });
         }
-
-        private static void AssignmentStatement()
+        
+        
+        private static void VarDeclaration()
         {
             GetNextToken();
+            while (_currentToken == LexicalAnalyzer.GetTokenCode("identifier"))
+            {
+                List<string> varNames = new List<string>();
+
+                while (_currentToken == LexicalAnalyzer.GetTokenCode("identifier"))
+                {
+
+                    varNames.Add(LexicalAnalyzer.LastIdentName);
+
+                    GetNextToken();
+                    if (_currentToken == LexicalAnalyzer.GetTokenCode(","))
+                    {
+                        GetNextToken();
+                        if (_currentToken != LexicalAnalyzer.GetTokenCode("identifier"))
+                        {
+                            InputOutput.Error(53, InputOutput.PositionNow); 
+                            InputOutput.ListErrors();
+                        }
+                    }
+                }
+
+                if (_currentToken == LexicalAnalyzer.GetTokenCode(":")) GetNextToken();
+                else { InputOutput.Error(54, InputOutput.PositionNow); InputOutput.ListErrors(); }
+
+                DataType currentType = DataType.Unknown;
+                if (IsTypeToken(_currentToken))
+                {
+                    currentType = SemanticAnalyzer.GetDataTypeFromToken(_currentToken);
+                    ParseType(); 
+                }
+                else { InputOutput.Error(55, InputOutput.PositionNow); InputOutput.ListErrors(); }
+                
+                foreach (string varName in varNames)
+                {
+                    byte err;
+                    if (!SemanticAnalyzer.AddSymbol(varName, currentType, SymbolKind.Variable, out err))
+                    {
+                        InputOutput.Error(err, InputOutput.PositionNow);
+                        InputOutput.ListErrors();
+                    }
+                }
+
+                if (_currentToken == LexicalAnalyzer.GetTokenCode(";")) GetNextToken();
+                else { InputOutput.Error(51, InputOutput.PositionNow); InputOutput.ListErrors(); }
+            }
+        }
+        private static void FunctionDeclaration()
+        {
+            GetNextToken(); 
+            
+            string funcName = LexicalAnalyzer.LastIdentName; 
+    
+            Symbol funcSymbol = new Symbol(funcName, DataType.Unknown, SymbolKind.Function);
+
+            if (_currentToken == LexicalAnalyzer.GetTokenCode("identifier")) 
+            {
+                GetNextToken(); 
+            }
+            else 
+            { 
+                InputOutput.Error(56, InputOutput.PositionNow); 
+                InputOutput.ListErrors(); 
+            }
+
+            SemanticAnalyzer.EnterFunctionScope();
+            SemanticAnalyzer.CurrentFunction = funcSymbol;
+
+            if (_currentToken == LexicalAnalyzer.GetTokenCode("("))
+            {
+                GetNextToken();
+                while (_currentToken == LexicalAnalyzer.GetTokenCode("identifier"))
+                {
+                    // 1. ЗАПОМИНАЕМ имя и ТОЧНУЮ позицию токена до сдвига лексера
+                    string paramName = LexicalAnalyzer.LastIdentName;
+                    var errorPos = InputOutput.PositionNow; // Сохраняем структуру позиции x
+                    
+                    GetNextToken(); // Уходим на ':'
+                    
+                    if (_currentToken == LexicalAnalyzer.GetTokenCode(":")) GetNextToken();
+                    
+                    DataType paramType = DataType.Unknown;
+                    if (IsTypeToken(_currentToken))
+                    {
+                        paramType = SemanticAnalyzer.GetDataTypeFromToken(_currentToken);
+                        ParseType(); // Уходим на ';' или ')'
+                    }
+
+                    // 2. При добавлении передаем именно сохраненную позицию errorPos
+                    byte err;
+                    if (!SemanticAnalyzer.AddSymbol(paramName, paramType, SymbolKind.Variable, out err))
+                    {
+                        InputOutput.Error(err, errorPos); // Ошибка отобразится точно над вторым 'x'
+                        InputOutput.ListErrors();
+                    }
+                    
+                    funcSymbol.ParameterTypes.Add(paramType);
+
+                    if (_currentToken == LexicalAnalyzer.GetTokenCode(";")) GetNextToken();
+                }
+                if (_currentToken == LexicalAnalyzer.GetTokenCode(")")) GetNextToken();
+                else { InputOutput.Error(57, InputOutput.PositionNow); InputOutput.ListErrors(); }
+            }
+
+            if (_currentToken == LexicalAnalyzer.GetTokenCode(":"))
+            {
+                GetNextToken();
+                if (IsTypeToken(_currentToken))
+                {
+                    funcSymbol.ReturnType = SemanticAnalyzer.GetDataTypeFromToken(_currentToken);
+                    funcSymbol.Type = funcSymbol.ReturnType;
+                    ParseType();
+                }
+                else { InputOutput.Error(55, InputOutput.PositionNow); InputOutput.ListErrors(); }
+            }
+            
+            byte globalErr;
+            SemanticAnalyzer.ExitFunctionScope();
+            if (!SemanticAnalyzer.AddSymbol(funcName, funcSymbol.Type, SymbolKind.Function, out globalErr))
+            {
+                InputOutput.Error(globalErr, InputOutput.PositionNow);
+                InputOutput.ListErrors();
+            }
+            SemanticAnalyzer.EnterFunctionScope();
+            SemanticAnalyzer.CurrentFunction = funcSymbol;
+
+            if (_currentToken == LexicalAnalyzer.GetTokenCode(";")) GetNextToken();
+            else { InputOutput.Error(51, InputOutput.PositionNow); InputOutput.ListErrors(); }
+
+            if (_currentToken == LexicalAnalyzer.GetTokenCode("const")) ConstDeclaration();
+            if (_currentToken == LexicalAnalyzer.GetTokenCode("var")) VarDeclaration();
+
+            CompoundStatement();
+            SemanticAnalyzer.ExitFunctionScope();
+
+            if (_currentToken == LexicalAnalyzer.GetTokenCode(";")) GetNextToken();
+            else { InputOutput.Error(51, InputOutput.PositionNow); InputOutput.ListErrors(); }
+        }
+        
+        private static void AssignmentStatement()
+        {
+            string targetName = LexicalAnalyzer.LastIdentName; 
+            Symbol targetSymbol = SemanticAnalyzer.FindSymbol(targetName);
+            
+            GetNextToken();
+            
+            if (targetSymbol == null)
+            {
+                InputOutput.Error(81, InputOutput.PositionNow); 
+                InputOutput.ListErrors();
+            }
+            else if (targetSymbol.Kind == SymbolKind.Constant)
+            {
+                InputOutput.Error(83, InputOutput.PositionNow); 
+                InputOutput.ListErrors();
+            }
+
             if (_currentToken == LexicalAnalyzer.GetTokenCode(":="))
             {
                 GetNextToken();
-                Expression();
+                
+                DataType exprType = Expression(); 
+                
+                if (targetSymbol != null && targetSymbol.Type != exprType)
+                {
+                    if (!(targetSymbol.Type == DataType.Real && exprType == DataType.Integer))
+                    {
+                        InputOutput.Error(82, InputOutput.PositionNow); 
+                        InputOutput.ListErrors();
+                    }
+                }
             }
             else
             {
@@ -562,56 +537,112 @@ namespace Компилятор
                 Neutralize(new List<byte> { LexicalAnalyzer.GetTokenCode(";"), LexicalAnalyzer.GetTokenCode("end") });
             }
         }
-
-        private static void Expression()
+        
+        private static DataType Expression()
         {
-            Term();
+            DataType type1 = Term();
             while (_currentToken == LexicalAnalyzer.GetTokenCode("+") || _currentToken == LexicalAnalyzer.GetTokenCode("-"))
             {
                 GetNextToken();
-                Term();
+                DataType type2 = Term();
+                
+                if ((type1 != DataType.Integer && type1 != DataType.Real) || 
+                    (type2 != DataType.Integer && type2 != DataType.Real))
+                {
+                    InputOutput.Error(84, InputOutput.PositionNow); 
+                    InputOutput.ListErrors();
+                    type1 = DataType.Unknown;
+                }
+                else if (type1 == DataType.Real || type2 == DataType.Real)
+                {
+                    type1 = DataType.Real; 
+                }
             }
+            return type1;
         }
 
-        private static void Term()
+        private static DataType Term()
         {
-            Factor();
+            DataType type1 = Factor();
             while (_currentToken == LexicalAnalyzer.GetTokenCode("*") || _currentToken == LexicalAnalyzer.GetTokenCode("/"))
             {
+                byte op = _currentToken;
                 GetNextToken();
-                Factor();
+                DataType type2 = Factor();
+
+                if ((type1 != DataType.Integer && type1 != DataType.Real) || 
+                    (type2 != DataType.Integer && type2 != DataType.Real))
+                {
+                    InputOutput.Error(84, InputOutput.PositionNow);
+                    InputOutput.ListErrors();
+                    type1 = DataType.Unknown;
+                }
+                else if (op == LexicalAnalyzer.GetTokenCode("/"))
+                {
+                    type1 = DataType.Real; 
+                }
+                else if (type1 == DataType.Real || type2 == DataType.Real)
+                {
+                    type1 = DataType.Real;
+                }
             }
+            return type1;
         }
 
-        private static void Factor()
+        private static DataType Factor()
         {
-            if (_currentToken == LexicalAnalyzer.GetTokenCode("identifier") || 
-                _currentToken == LexicalAnalyzer.GetTokenCode("number") || 
-                _currentToken == LexicalAnalyzer.GetTokenCode("string_literal"))
+            if (_currentToken == LexicalAnalyzer.GetTokenCode("identifier"))
+            {
+                string name = LexicalAnalyzer.LastIdentName; 
+                Symbol s = SemanticAnalyzer.FindSymbol(name);
+                GetNextToken();
+
+                if (s == null)
+                {
+                    InputOutput.Error(81, InputOutput.PositionNow); 
+                    InputOutput.ListErrors();
+                    return DataType.Unknown;
+                }
+                return s.Type;
+            }
+            else if (_currentToken == LexicalAnalyzer.GetTokenCode("number"))
             {
                 GetNextToken();
+                return DataType.Integer; 
+            }
+            else if (_currentToken == LexicalAnalyzer.GetTokenCode("string_literal"))
+            {
+                GetNextToken();
+                return DataType.String;
             }
             else if (_currentToken == LexicalAnalyzer.GetTokenCode("("))
             {
                 GetNextToken();
-                Expression();
-                if (_currentToken == LexicalAnalyzer.GetTokenCode(")"))
-                {
-                    GetNextToken();
-                }
-                else
-                {
-                    InputOutput.Error(41, InputOutput.PositionNow); 
-                    InputOutput.ListErrors();
-                }
+                DataType t = Expression();
+                if (_currentToken == LexicalAnalyzer.GetTokenCode(")")) GetNextToken();
+                else { InputOutput.Error(41, InputOutput.PositionNow); InputOutput.ListErrors(); }
+                return t;
             }
             else
             {
-                InputOutput.Error(61, InputOutput.PositionNow); 
-                InputOutput.ListErrors();
+                InputOutput.Error(61, InputOutput.PositionNow); InputOutput.ListErrors();
+                return DataType.Unknown;
             }
         }
-
+        
+        private static string GetCurrentTokenString()
+        {
+            try
+            {
+                string line = InputOutput.FileLines[(int)InputOutput.PositionNow.LineNumber];
+                int start = InputOutput.PositionNow.CharNumber;
+                int len = 0;
+                while (start + len < line.Length && char.IsLetterOrDigit(line[start + len])) len++;
+                return line.Substring(start, len);
+            }
+            catch { return "unknown"; }
+        }
+        
         private static bool IsTypeToken(byte token)
         {
             return token == LexicalAnalyzer.GetTokenCode("integer") ||

@@ -1,37 +1,52 @@
-program FunctionErrorDemo;
+program SemanticMaster;
 
-var
-    globalX : integer;
-
-function (x : integer) : boolean;
-begin
-    Func1 := true;
-end;
-
-function CalcSum(a : integer; b : integer : integer;
-begin
-    CalcSum := a + b;
-end;
-
-function ProcessData(val : real) : boolean
-begin
-    ProcessData := false;
-end;
-
-function LocalScopeError : integer;
-var
-    temp : integer;
 const
-    LocalConst = 10;
+    MaxCount = 100;
+
+var
+    globalInt  : integer;
+    globalReal : real;
+    globalStr  : string;
+
+var
+    globalInt : real; 
+
+function DuplicateParam(x : integer; x : real) : integer;
 begin
-    LocalScopeError := LocalConst;
+    DuplicateParam := 1;
 end;
 
-function DropSemicolon : integer;
+function DuplicateLocal : integer;
+var
+    loc : integer;
+    loc : real; 
 begin
-    DropSemicolon := 1;
-end
+    DuplicateLocal := 1;
+end;
+
+function UnknownIdentifiers : integer;
+begin
+    UnknownIdentifiers := undefinedVariable + 5; 
+end;
+
+function AssignToConst : integer;
+begin
+    MaxCount := 200; 
+    AssignToConst := 1;
+end;
+
+function BadAssignment : integer;
+begin
+    globalInt := 'Hello'; 
+    BadAssignment := 1;
+end;
+
+function BadExpression : integer;
+begin
+    globalReal := globalStr * 2.5; 
+    BadExpression := 1;
+end;
 
 begin
-    globalX := 10;
+    globalInt := 10;
 end.

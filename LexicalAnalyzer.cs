@@ -8,7 +8,9 @@ namespace Компилятор
         private static Dictionary<string, byte> _keywords;
         private static Dictionary<string, byte> _tokenCodes;
         private static int _roundBracketBalance;
-        private static int _lastNumericValue; // Для передачи числового значения в парсер
+        private static int _lastNumericValue; 
+        private static string _lastIdentName = "";
+        public static string LastIdentName { get { return _lastIdentName; } }
 
         private const int MAX_PASCAL_INT = 32767;
         private const int MIN_PASCAL_INT = -32768;
@@ -31,8 +33,7 @@ namespace Компилятор
             _keywords.Add("begin", 6);
             _keywords.Add("end", 7);
             _keywords.Add("function", 8);
-
-            // 7 стандартных типов данных
+            
             _keywords.Add("integer", 11);
             _keywords.Add("real", 12);
             _keywords.Add("boolean", 13);
@@ -246,7 +247,10 @@ namespace Компилятор
                 break;
             }
 
-            if (InputOutput.IsEndOfFile) return 0;
+            if (InputOutput.IsEndOfFile)
+            {
+                return 0;
+            }
 
             if (char.IsLetter(InputOutput.Ch))
             {
@@ -256,14 +260,15 @@ namespace Компилятор
                     word += InputOutput.Ch;
                     InputOutput.NextCh();
                 }
-                word = word.ToLower();
+                
+                _lastIdentName = word; 
 
+                word = word.ToLower();
                 if (_keywords.ContainsKey(word)) return _keywords[word];
                 if (_tokenCodes.ContainsKey("identifier")) return _tokenCodes["identifier"];
                 return 0;
             }
-
-            // Обработка ЧИСЕЛ (Целых и Вещественных)
+            
             if (char.IsDigit(InputOutput.Ch))
             {
                 string numStr = "";
